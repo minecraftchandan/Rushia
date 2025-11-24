@@ -35,8 +35,20 @@ async function checkReminders(client) {
 
       const sendPromise = (async () => {
         try {
-          const userSettings = getUserSettings(reminderData.userId);
-          const sendReminder = !userSettings || userSettings[reminderData.type] !== false;
+          let userSettings = getUserSettings(reminderData.userId);
+          if (!userSettings) {
+            const { updateUserSettings } = require('../utils/userSettingsManager');
+            await updateUserSettings(reminderData.userId, {
+              expedition: true,
+              stamina: true,
+              raid: true,
+              staminaDM: false,
+              expeditionDM: false,
+              raidSpawnReminder: true
+            });
+            userSettings = getUserSettings(reminderData.userId);
+          }
+          const sendReminder = userSettings[reminderData.type] !== false;
           
           // Determine DM preference based on reminder type
           let sendInDm = false;
@@ -101,3 +113,4 @@ function startScheduler(client) {
 }
 
 module.exports = { startScheduler };
+
