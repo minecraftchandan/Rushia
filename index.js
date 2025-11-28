@@ -61,11 +61,16 @@ const { processStaminaMessage } = require('./systems/staminaReminderSystem');
 const { processExpeditionMessage } = require('./systems/expeditionReminderSystem');
 const { processRaidMessage } = require('./systems/raidReminderSystem');
 const { detectRaidSpawnCommand } = require('./systems/spawnReminderSystem');
+const { processPingNotification } = require('./systems/pingNotificationSystem');
 const { LUVI_BOT_ID } = require('./config/constants');
 
 const processedMessages = new Set();
 
 client.on(Events.MessageCreate, async (message) => {
+  // Process ping notifications for any message
+  await processPingNotification(message);
+  
+  // Only process Luvi bot messages for game notifications
   if (message.author.id !== LUVI_BOT_ID) return;
   
   const messageKey = `${message.id}-${message.createdTimestamp}`;
