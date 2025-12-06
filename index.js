@@ -62,15 +62,13 @@ const { processStaminaMessage } = require('./systems/staminaReminderSystem');
 const { processExpeditionMessage } = require('./systems/expeditionReminderSystem');
 const { processRaidMessage } = require('./systems/raidReminderSystem');
 
-const { processPingNotification } = require('./systems/pingNotificationSystem');
+
 
 const { processInventoryMessage: processGeneratorMessage, handleGeneratorReaction, handleNameSelect, handleAddName, handleRemoveName, handleNextSection, handleAddField, handleFieldSelect, handleFinishGenerator } = require('./systems/messageGeneratorSystem');
 const { LUVI_BOT_ID } = require('./config/constants');
 const CacheManager = require('./optimization/cache');
 
 client.on(Events.MessageCreate, async (message) => {
-  // Process ping notifications for any message
-  await processPingNotification(message);
   
   // Handle bot mentions for card search and logs
   if (!message.author.bot && message.mentions.has(client.user)) {
