@@ -508,8 +508,53 @@ async function handleFinishGenerator(interaction) {
 }
 
 function startInventoryWatcher(userId, inventoryMessage) {
-  // This function can be implemented to watch for inventory page changes
-  // For now, it's a placeholder
+  const checkInterval = setInterval(async () => {
+    const userData = generatorData.get(userId);
+    if (!userData) {
+      clearInterval(checkInterval);
+      return;
+    }
+    
+    try {
+      const channel = await inventoryMessage.client.channels.fetch(userData.inventoryChannelId);
+      const message = await channel.messages.fetch(userData.inventoryMessageId);
+      
+      if (!message.embeds.length) return;
+      
+      const embed = message.embeds[0];
+      const newCards = parseInventoryEmbed(embed);
+      
+      // Check if cards changed
+      if (JSON.stringify(newCards) !== JSON.stringify(userData.cards)) {
+        userData.cards = newCards;
+        
+        // Update dropdown message
+        const mainMessage = generatorData.get(`main_message_${userId}`);
+        if (mainMessage) {
+          const dropdown = createNameDropdown(newCards, userId);
+          const actionButtons = createNameActionButtons(userId, userData.currentSelection !== null);
+          const selectedText = userData.selectedNames.length > 0 ? userData.selectedNames.join(', ') : 'None';
+          const commandPreview = buildCommandPreview(userData);
+          
+          const updateEmbed = new EmbedBuilder()
+            .setTitle('🛠️ Command Builder - Card Selection')
+            .setDescription(`**How to use:**\n1️⃣ Select a card from the dropdown menu\n2️⃣ Click **Add** to add it to your command\n3️⃣ Click **Remove** to remove selected card\n4️⃣ Click **Next Section** when ready\n\n**📝 Building Command:** \`${commandPreview}\`\n**🎯 Added Names:** ${selectedText}`)
+            .setColor(0x3498db);
+          
+          await mainMessage.edit({
+            embeds: [updateEmbed],
+            components: [dropdown, actionButtons]
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in inventory watcher:', error);
+      clearInterval(checkInterval);
+    }
+  }, 2000);
+  
+  // Stop watching after 10 minutes
+  setTimeout(() => clearInterval(checkInterval), 10 * 60 * 1000);
 }
 
 module.exports = {
